@@ -1,15 +1,26 @@
 #tag Class
 Protected Class DocumentSettings
 	#tag Method, Flags = &h0
-		Sub FromJSON(json As Text)
-		  dim dict as Xojo.Core.Dictionary = Xojo.Data.ParseJSON( json )
-		  
+		Sub Constructor()
+		  if DefaultSettingsDict is nil then
+		    DefaultSettingsDict = ToDictionary
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub FromDictionary(dict As Xojo.Core.Dictionary)
+		  dim defaults as Xojo.Core.Dictionary = DefaultSettingsDict
 		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
 		  
 		  for each prop as Xojo.Introspection.PropertyInfo in ti.Properties
-		    dim key as text = prop.Name.Lowercase
-		    if dict.HasKey( key ) then
-		      prop.Value( self ) = dict.Value( key )
+		    if not prop.IsShared and prop.IsPublic and prop.CanRead and prop.CanWrite then
+		      dim key as text = prop.Name.Lowercase
+		      if dict.HasKey( key ) then
+		        prop.Value( self ) = dict.Value( key )
+		      elseif defaults.HasKey( key ) then
+		        prop.Value( self ) = defaults.Value( key )
+		      end if
 		    end if
 		  next
 		  
@@ -17,8 +28,22 @@ Protected Class DocumentSettings
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function ToJSON() As Text
+		Sub FromJSON(json As Text)
+		  dim dict as Xojo.Core.Dictionary = Xojo.Data.ParseJSON( json )
+		  FromDictionary dict
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Reset()
+		  FromDictionary DefaultSettingsDict
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ToDictionary() As Xojo.Core.Dictionary
 		  dim dict as new Xojo.Core.Dictionary
+		  
 		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
 		  
 		  for each prop as Xojo.Introspection.PropertyInfo in ti.Properties
@@ -28,14 +53,25 @@ Protected Class DocumentSettings
 		    end if
 		  next
 		  
+		  return dict
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function ToJSON() As Text
+		  dim dict as Xojo.Core.Dictionary = ToDictionary
 		  return Xojo.Data.GenerateJSON( dict )
 		  
 		End Function
 	#tag EndMethod
 
 
+	#tag Property, Flags = &h21
+		Private Shared DefaultSettingsDict As Xojo.Core.Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h0
-		ShellCommand As String = "telnet 127.0.0.1 5555"
+		ShellCommand As String = "ssh pi@pi-vpn.local 'telnet 127.0.0.1 5555'"
 	#tag EndProperty
 
 

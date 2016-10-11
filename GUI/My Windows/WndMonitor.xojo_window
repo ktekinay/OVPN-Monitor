@@ -26,13 +26,6 @@ Begin Window WndMonitor
    Title           =   "OpenVPN Server Monitor"
    Visible         =   True
    Width           =   600
-   Begin DocumentSettings Settings
-      Index           =   -2147483648
-      LockedInPosition=   False
-      Scope           =   0
-      ShellCommand    =   "telnet 127.0.0.1 5555"
-      TabPanelIndex   =   0
-   End
    Begin MonitorToolbar TB
       Enabled         =   True
       Index           =   -2147483648
@@ -42,15 +35,135 @@ Begin Window WndMonitor
       TabPanelIndex   =   0
       Visible         =   True
    End
+   Begin Timer TmrMonitor
+      Index           =   -2147483648
+      LockedInPosition=   False
+      Mode            =   2
+      Period          =   1000
+      Scope           =   2
+      TabPanelIndex   =   0
+   End
+   Begin Shell ShMonitor
+      Arguments       =   ""
+      Backend         =   ""
+      Canonical       =   False
+      Index           =   -2147483648
+      LockedInPosition=   False
+      Mode            =   2
+      Scope           =   2
+      TabPanelIndex   =   0
+      TimeOut         =   0
+   End
 End
 #tag EndWindow
 
 #tag WindowCode
+	#tag Event
+		Sub Close()
+		  TmrMonitor.Mode = Timer.ModeOff
+		  CloseShell
+		End Sub
+	#tag EndEvent
+
+
+	#tag Method, Flags = &h21
+		Private Sub CloseShell()
+		  if ShMonitor.IsRunning then
+		    ShMonitor.WriteLine "quit"
+		    Mode = Modes.Closing
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ShowSettings()
+		  dim w as new WndSettings
+		  dim newSettings as DocumentSettings = w.ShowModalWithin( self, Settings )
+		  if newSettings isa object then
+		    CloseShell
+		    Settings = newSettings
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+
+	#tag Property, Flags = &h21
+		Private Mode As Modes
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mSettings As DocumentSettings
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mSettings is nil then
+			    mSettings = new DocumentSettings
+			  end if
+			  
+			  return mSettings
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mSettings = value
+			End Set
+		#tag EndSetter
+		Private Settings As DocumentSettings
+	#tag EndComputedProperty
+
+
+	#tag Enum, Name = Modes, Type = Integer, Flags = &h21
+		Standby
+		  Connecting
+		  GettingStatus
+		Closing
+	#tag EndEnum
+
+
 #tag EndWindowCode
 
 #tag Events TB
 	#tag Event
 		Sub Action(item As ToolItem)
+		  select case item.Caption
+		  case TB.Settings.Caption
+		    ShowSettings
+		    
+		  end select
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events TmrMonitor
+	#tag Event
+		Sub Action()
+		  if Mode <> Modes.Standby then
+		    return
+		  end if
+		  
+		  if ShMonitor.IsRunning = false then
+		    ShMonitor.Execute Settings.ShellCommand
+		    
+		  else
+		    ShMonitor.WriteLine "status 2"
+		    Mode = Modes.GettingStatus
+		  end if
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events ShMonitor
+	#tag Event
+		Sub DataAvailable()
+		  dim r as string = me.ReadAll
+		  
+		  r = r
+		  
+		  Mode = Modes.Standby
+		  
 		  
 		End Sub
 	#tag EndEvent
