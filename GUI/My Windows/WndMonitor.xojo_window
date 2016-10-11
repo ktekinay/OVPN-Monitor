@@ -26,12 +26,35 @@ Begin Window WndMonitor
    Title           =   "OpenVPN Server Monitor"
    Visible         =   True
    Width           =   600
+   Begin DocumentSettings Settings
+      Index           =   -2147483648
+      LockedInPosition=   False
+      Scope           =   0
+      ShellCommand    =   "telnet 127.0.0.1 5555"
+      TabPanelIndex   =   0
+   End
+   Begin MonitorToolbar TB
+      Enabled         =   True
+      Index           =   -2147483648
+      InitialParent   =   ""
+      LockedInPosition=   False
+      Scope           =   2
+      TabPanelIndex   =   0
+      Visible         =   True
+   End
 End
 #tag EndWindow
 
 #tag WindowCode
 #tag EndWindowCode
 
+#tag Events TB
+	#tag Event
+		Sub Action(item As ToolItem)
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
 #tag ViewBehavior
 	#tag ViewProperty
 		Name="BackColor"

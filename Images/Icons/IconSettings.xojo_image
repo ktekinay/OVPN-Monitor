@@ -1,0 +1,46 @@
+#tag MultiImage
+Image IconSettings
+	#tag ImageRepresentation
+		SaveInfo = APHRcwECAQAAAAGuAAAAAAGuAAIAAAVBdGxhcwAAAAAAAAAAAAAAAAAAAAAAAAAAAADS3/TBSCsAAAAeDqUOa2NvbnRyb2wtMy5wbmcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4RSsggKh0AAAAAAAAAAP////8AAAkgAAAAAAAAAAAAAAAAAAAABGFwcHMAEAAIAADS4DsRAAAAEQAIAADIIGJdAAAAAQAYAB4OpQAeBy0AHfPtAB2kMwAdo9EAGy5BAAIAUkF0bGFzOlRlbGVDb206AG9wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkOgBpY29uczoAcG5nOgAxNngxNjoAYXBwczoAa2NvbnRyb2wtMy5wbmcADgAeAA4AawBjAG8AbgB0AHIAbwBsAC0AMwAuAHAAbgBnAA8ADAAFAEEAdABsAGEAcwASAEZUZWxlQ29tL29wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkL2ljb25zL3BuZy8xNngxNi9hcHBzL2tjb250cm9sLTMucG5nABMAAS8A//8AAAAAAAAAAA==
+		FullPath = /TeleCom/open_icon_library-standard/icons/png/16x16/apps/kcontrol-3.png
+		PartialPath = ..\..\..\..\..\..\TeleCom\open_icon_library-standard\icons\png\16x16\apps\kcontrol-3.png
+		#tag ImageSpecification
+			Comment = 
+			Device = 31
+			HSize = 16.00
+			Orientation = Any
+			Platform = 15
+			PPI = 72
+			VSize = 16.00
+		#tag EndImageSpecification
+	#tag EndImageRepresentation
+	#tag ImageRepresentation
+		SaveInfo = APHRcwECAQAAAAGuAAAAAAGuAAIAAAVBdGxhcwAAAAAAAAAAAAAAAAAAAAAAAAAAAADS3/TBSCsAAAAeUJYOa2NvbnRyb2wtMy5wbmcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB5TOsggKjcAAAAAAAAAAP////8AAAkgAAAAAAAAAAAAAAAAAAAABGFwcHMAEAAIAADS4DsRAAAAEQAIAADIIGJ3AAAAAQAYAB5QlgAeTB0AHfPtAB2kMwAdo9EAGy5BAAIAUkF0bGFzOlRlbGVDb206AG9wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkOgBpY29uczoAcG5nOgAzMngzMjoAYXBwczoAa2NvbnRyb2wtMy5wbmcADgAeAA4AawBjAG8AbgB0AHIAbwBsAC0AMwAuAHAAbgBnAA8ADAAFAEEAdABsAGEAcwASAEZUZWxlQ29tL29wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkL2ljb25zL3BuZy8zMngzMi9hcHBzL2tjb250cm9sLTMucG5nABMAAS8A//8AAAAAAAAAAA==
+		FullPath = /TeleCom/open_icon_library-standard/icons/png/32x32/apps/kcontrol-3.png
+		PartialPath = ..\..\..\..\..\..\TeleCom\open_icon_library-standard\icons\png\32x32\apps\kcontrol-3.png
+		#tag ImageSpecification
+			Comment = 
+			Device = 31
+			HSize = 16.00
+			Orientation = Any
+			Platform = 15
+			PPI = 144
+			VSize = 16.00
+		#tag EndImageSpecification
+	#tag EndImageRepresentation
+	#tag ImageRepresentation
+		SaveInfo = APHRcwECAQAAAAGuAAAAAAGuAAIAAAVBdGxhcwAAAAAAAAAAAAAAAAAAAAAAAAAAAADS3/TBSCsAAAAeZbMOa2NvbnRyb2wtMy5wbmcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB5oR8ggKkEAAAAAAAAAAP////8AAAkgAAAAAAAAAAAAAAAAAAAABGFwcHMAEAAIAADS4DsRAAAAEQAIAADIIGKBAAAAAQAYAB5lswAeYX0AHfPtAB2kMwAdo9EAGy5BAAIAUkF0bGFzOlRlbGVDb206AG9wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkOgBpY29uczoAcG5nOgA0OHg0ODoAYXBwczoAa2NvbnRyb2wtMy5wbmcADgAeAA4AawBjAG8AbgB0AHIAbwBsAC0AMwAuAHAAbgBnAA8ADAAFAEEAdABsAGEAcwASAEZUZWxlQ29tL29wZW5faWNvbl9saWJyYXJ5LXN0YW5kYXJkL2ljb25zL3BuZy80OHg0OC9hcHBzL2tjb250cm9sLTMucG5nABMAAS8A//8AAAAAAAAAAA==
+		FullPath = /TeleCom/open_icon_library-standard/icons/png/48x48/apps/kcontrol-3.png
+		PartialPath = ..\..\..\..\..\..\TeleCom\open_icon_library-standard\icons\png\48x48\apps\kcontrol-3.png
+		#tag ImageSpecification
+			Comment = 
+			Device = 31
+			HSize = 16.00
+			Orientation = Any
+			Platform = 15
+			PPI = 216
+			VSize = 16.00
+		#tag EndImageSpecification
+	#tag EndImageRepresentation
+End Image
+#tag EndMultiImage
