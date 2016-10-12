@@ -54,6 +54,56 @@ Begin Window WndMonitor
       TabPanelIndex   =   0
       TimeOut         =   0
    End
+   Begin CustomListbox LbStatus
+      AutoDeactivate  =   True
+      AutoHideScrollbars=   True
+      Bold            =   False
+      Border          =   True
+      ColumnCount     =   1
+      ColumnsResizable=   False
+      ColumnWidths    =   ""
+      DataField       =   ""
+      DataSource      =   ""
+      DefaultRowHeight=   -1
+      Enabled         =   True
+      EnableDrag      =   False
+      EnableDragReorder=   False
+      GridLinesHorizontal=   0
+      GridLinesVertical=   0
+      HasHeading      =   False
+      HeadingIndex    =   -1
+      Height          =   360
+      HelpTag         =   ""
+      Hierarchical    =   False
+      Index           =   -2147483648
+      InitialParent   =   ""
+      InitialValue    =   ""
+      Italic          =   False
+      Left            =   9
+      LockBottom      =   True
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   True
+      LockTop         =   True
+      RequiresSelection=   False
+      Scope           =   0
+      ScrollbarHorizontal=   False
+      ScrollBarVertical=   True
+      SelectionType   =   0
+      TabIndex        =   0
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   20
+      Underline       =   False
+      UseFocusRing    =   True
+      Visible         =   True
+      Width           =   583
+      _ScrollOffset   =   0
+      _ScrollWidth    =   -1
+   End
 End
 #tag EndWindow
 
@@ -67,6 +117,34 @@ End
 
 
 	#tag Method, Flags = &h21
+		Private Function AbbreviateBytes(bytes As Integer) As String
+		  dim suffix as string
+		  dim stringValue as string
+		  
+		  select case bytes
+		  case is > 1024 * 1024 * 1000
+		    suffix = " GB"
+		    stringValue = format( bytes / ( 1024 ^ 3 ), "#,0.00" )
+		    
+		  case is > 1024 * 1000
+		    suffix = " MB"
+		    stringValue = format( bytes / ( 1024 ^ 2 ), "#,0.00" )
+		    
+		  case is > 1000
+		    suffix = " KB"
+		    stringValue = format( bytes / 1024, "#,0.00" )
+		    
+		  case else
+		    suffix = " b"
+		    stringValue = format( bytes, "#,0" )
+		    
+		  end select
+		  
+		  return stringValue + suffix
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub CloseShell()
 		  if ShMonitor.IsRunning then
 		    ShMonitor.WriteLine "quit"
@@ -74,6 +152,122 @@ End
 		  end if
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ParseStatus(data As String)
+		  const kTab as string = &u09
+		  
+		  static excludeHeaders() as string = _
+		  array( "Connected Since (time_t)" )
+		  dim excludeColumnIndexes() as integer
+		  
+		  dim touchedRows() as boolean
+		  redim touchedRows( LbStatus.ListCount - 1 )
+		  
+		  data = ReplaceLineEndings( data, EndOfLine )
+		  dim lines() as string = data.Split( EndOfLine )
+		  
+		  for lineIndex as integer = 0 to lines.Ubound
+		    dim dataLine as string = lines( lineIndex )
+		    if dataLine = "" then
+		      continue for lineIndex
+		    end if
+		    
+		    dim fields() as string = dataLine.Split( kTab )
+		    dim fieldHeader as string = fields( 0 )
+		    fields.Remove 0
+		    
+		    if fieldHeader = "HEADER" then
+		      fieldHeader = fieldHeader + " " + fields( 0 )
+		      fields.Remove 0
+		    end if
+		    
+		    select case fieldHeader
+		    case "END"
+		      exit for lineIndex
+		      
+		    case "HEADER CLIENT_LIST"
+		      for i as integer = fields.Ubound downto 0
+		        if excludeHeaders.IndexOf( fields( i ) ) <> -1 then
+		          fields.Remove i
+		          excludeColumnIndexes.Append i
+		        end if
+		      next
+		      excludeColumnIndexes.Sort
+		      
+		      LbStatus.HasHeading = true
+		      LbStatus.ColumnCount = fields.Ubound + 1
+		      for headerIndex as integer = 0 to fields.Ubound
+		        LbStatus.Heading( headerIndex ) = fields( headerIndex )
+		      next headerIndex
+		      
+		      LbStatus.ColumnWidths = "10%,20%,20%,10%,10%,20%,10%"
+		      
+		    case "CLIENT_LIST"
+		      for i as integer = excludeColumnIndexes.Ubound downto 0
+		        fields.Remove excludeColumnIndexes( i )
+		      next
+		      
+		      fields( integer( Columns.BytesReceived ) ) = AbbreviateBytes( fields( integer( Columns.BytesReceived ) ).Val )
+		      fields( integer( Columns.BytesSent ) ) = AbbreviateBytes( fields( integer( Columns.BytesSent ) ).Val )
+		      
+		      dim hash as string = fields( integer( Columns.Username ) ) + fields( integer( Columns.RealAddress ) ) + _
+		      fields( integer( Columns.ConnectedSince ) )
+		      hash = EncodeHex( Crypto.MD5( hash ) )
+		      
+		      dim row as integer = RowByHash( hash )
+		      if row = -1 then
+		        LbStatus.AddRow fields
+		        LbStatus.RowTag( LbStatus.LastIndex ) = hash
+		      else
+		        for col as integer = 0 to fields.Ubound
+		          LbStatus.Cell( row, col ) = fields( col )
+		        next
+		        touchedRows( row ) = true
+		      end if
+		      
+		    end select
+		    
+		  next lineIndex
+		  
+		  //
+		  // See which rows weren't touched
+		  //
+		  dim deleteDate as new Date
+		  deleteDate.TotalSeconds = deleteDate.TotalSeconds + 30
+		  dim now as new Date
+		  
+		  for row as integer = touchedRows.Ubound downto 0
+		    if touchedRows( row ) = false then
+		      //
+		      // See if already needs to be deleted
+		      //
+		      dim tag as variant = LbStatus.RowTag( row )
+		      if tag.Type = Variant.TypeDate and tag.DateValue.TotalSeconds < now.TotalSeconds then
+		        LbStatus.RemoveRow row
+		      elseif tag.Type <> Variant.TypeDate then
+		        LbStatus.RowTag( row ) = deleteDate
+		      end if
+		      
+		    end if
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function RowByHash(hash As String) As Integer
+		  dim lastRow as integer = LbStatus.ListCount - 1
+		  for row as integer = 0 to lastRow
+		    dim tag as variant = LbStatus.RowTag( row )
+		    if tag.StringValue = hash then
+		      return row
+		    end if
+		  next
+		  
+		  return -1
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -116,6 +310,16 @@ End
 	#tag EndComputedProperty
 
 
+	#tag Enum, Name = Columns, Type = Integer, Flags = &h21
+		CommonName
+		  RealAddress
+		  VirtualAddress
+		  BytesReceived
+		  BytesSent
+		  ConnectedSince
+		Username
+	#tag EndEnum
+
 	#tag Enum, Name = Modes, Type = Integer, Flags = &h21
 		Standby
 		  Connecting
@@ -149,7 +353,7 @@ End
 		    ShMonitor.Execute Settings.ShellCommand
 		    
 		  else
-		    ShMonitor.WriteLine "status 2"
+		    ShMonitor.WriteLine "status 3"
 		    Mode = Modes.GettingStatus
 		  end if
 		End Sub
@@ -158,14 +362,33 @@ End
 #tag Events ShMonitor
 	#tag Event
 		Sub DataAvailable()
-		  dim r as string = me.ReadAll
+		  dim data as string = me.ReadAll
 		  
-		  r = r
+		  select case Mode
+		  case Modes.GettingStatus
+		    ParseStatus data
+		    
+		  end select
 		  
 		  Mode = Modes.Standby
 		  
 		  
 		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events LbStatus
+	#tag Event
+		Function CellTextPaint(g As Graphics, row As Integer, column As Integer, x as Integer, y as Integer) As Boolean
+		  #pragma unused column
+		  #pragma unused x
+		  #pragma unused y
+		  
+		  dim tag as variant = me.RowTag( row )
+		  if tag.Type = Variant.TypeDate then
+		    g.Italic = true
+		  end if
+		  
+		End Function
 	#tag EndEvent
 #tag EndEvents
 #tag ViewBehavior
