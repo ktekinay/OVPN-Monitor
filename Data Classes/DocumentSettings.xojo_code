@@ -36,6 +36,10 @@ Protected Class DocumentSettings
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function Operator_Compare(other As DocumentSettings) As Integer
+		  if other is nil then
+		    return -1
+		  end if
+		  
 		  dim result as integer = 0
 		  
 		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
@@ -55,6 +59,7 @@ Protected Class DocumentSettings
 		        //
 		        // We don't know the type so raise an exception
 		        //
+		        System.DebugLog "Couldn't compare prop type for " + prop.Name
 		        raise new UnsupportedFormatException
 		        
 		      end select
