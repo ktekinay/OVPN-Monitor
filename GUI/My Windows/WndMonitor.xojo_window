@@ -219,6 +219,14 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub AddToQueue(cmd As String, mode As Modes)
+		  CommandQueue.Append cmd
+		  CommandModeQueue.Append mode
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub CloseShell()
 		  if ShMonitor.IsRunning then
 		    ShMonitor.WriteLine "quit"
@@ -464,6 +472,14 @@ End
 	#tag EndMethod
 
 
+	#tag Property, Flags = &h21
+		Private CommandModeQueue() As Modes
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private CommandQueue() As String
+	#tag EndProperty
+
 	#tag Property, Flags = &h0
 		File As Xojo.IO.FolderItem
 	#tag EndProperty
@@ -503,6 +519,9 @@ End
 	#tag EndProperty
 
 
+	#tag Constant, Name = kCaptionKillConnection, Type = String, Dynamic = False, Default = \"Kill Connection\xE2\x80\xA6", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kDefaultTitle, Type = String, Dynamic = False, Default = \"New OpenVPN Monitor ", Scope = Private
 	#tag EndConstant
 
@@ -521,6 +540,7 @@ End
 		Standby
 		  Connecting
 		  GettingStatus
+		  KillingConnection
 		Closing
 	#tag EndEnum
 
@@ -552,9 +572,19 @@ End
 		  if ShMonitor.IsRunning = false then
 		    ShMonitor.Execute Settings.ShellCommand
 		    
+		  elseif CommandQueue.Ubound <> -1 then
+		    dim cmd as string = CommandQueue( 0 )
+		    CommandQueue.Remove 0
+		    dim mode as Modes = CommandModeQueue( 0 )
+		    CommandModeQueue.Remove 0
+		    
+		    ShMonitor.WriteLine cmd
+		    self.Mode = mode
+		    
 		  else
 		    ShMonitor.WriteLine "status 3"
 		    Mode = Modes.GettingStatus
+		    
 		  end if
 		End Sub
 	#tag EndEvent
@@ -567,6 +597,11 @@ End
 		  select case Mode
 		  case Modes.GettingStatus
 		    ParseStatus data
+		    
+		  case Modes.KillingConnection
+		    if data.InStr( "SUCCESS" ) = 0 then
+		      MsgBox data
+		    end if
 		    
 		  end select
 		  
@@ -596,6 +631,53 @@ End
 		  
 		End Function
 	#tag EndEvent
+	#tag Event
+		Function ConstructContextualMenu(base as MenuItem, x as Integer, y as Integer) As Boolean
+		  if me.ListCount = 0 then
+		    return true
+		  end if
+		  
+		  dim row as integer = me.RowFromXY( x, y )
+		  if row = -1 or row >= me.ListCount then
+		    return true
+		  end if
+		  
+		  if me.RowTag( row ) isa date then
+		    //
+		    // This is already closed
+		    //
+		    return true
+		  end if
+		  
+		  base.Append new MenuItem( kCaptionKillConnection, row )
+		  return true
+		End Function
+	#tag EndEvent
+	#tag Event
+		Function ContextualMenuAction(hitItem as MenuItem) As Boolean
+		  select case hitItem.Text
+		  case kCaptionKillConnection
+		    dim row as integer = hitItem.Tag
+		    dim fromIP as string = me.Cell( row, integer( Columns.RealAddress ) )
+		    dim username as string = me.Cell( row, integer( Columns.CommonName ) )
+		    if username = "" then
+		      username = "unknown"
+		    end if
+		    
+		    dim dlg as new MessageDialog
+		    dlg.Message = "Really kill this connection?"
+		    dlg.Explanation = username + " connected from " + fromIP
+		    dlg.ActionButton.Caption = "Kill"
+		    dlg.CancelButton.Visible = true
+		    
+		    dim btn as MessageDialogButton = dlg.ShowModalWithin( self )
+		    if btn is dlg.ActionButton then
+		      AddToQueue "kill " + fromIP, Modes.KillingConnection
+		    end if
+		    
+		  end select
+		End Function
+	#tag EndEvent
 #tag EndEvents
 #tag Events TmrForceClose
 	#tag Event
@@ -605,39 +687,6 @@ End
 		  end if
 		  
 		  Mode = Modes.Standby
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events TmrLoad
-	#tag Event
-		Sub Action()
-		  dim tis as Xojo.IO.TextInputStream = Xojo.IO.TextInputStream.Open( File, Xojo.Core.TextEncoding.UTF8 )
-		  dim contents as text = tis.ReadAll
-		  tis.Close
-		  
-		  dim newSettings as new DocumentSettings
-		  newSettings.FromJSON contents
-		  
-		  if newSettings <> Settings then
-		    Settings = newSettings
-		    CloseShell
-		    LbStatus.DeleteAllRows
-		    LbStatus.HasHeading = false
-		  end if
-		  
-		  IsNew = false
-		  ContentsChanged = false
-		  
-		  SetTitle
-		  
-		  Exception err as RuntimeException
-		    if err isa EndException or err isa ThreadEndException then
-		      raise err
-		    end if
-		    
-		    MsgBox "Could not open this document." + EndOfLine + EndOfLine + err.Message
-		    self.Close
-		    
 		End Sub
 	#tag EndEvent
 #tag EndEvents
