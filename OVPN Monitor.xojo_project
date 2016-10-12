@@ -21,6 +21,7 @@ Folder=My Widgets;GUI/My Widgets;&h4562FFFF;&h5612F7FF;false
 Class=PlatformPushButton;GUI/My Widgets/PlatformPushButton.xojo_code;&h3578F1B0;&h4562FFFF;false
 Window=DialogButtonContainer;GUI/My Widgets/DialogButtonContainer.xojo_window;&h250AC3B6;&h4562FFFF;false
 Class=CustomTextField;GUI/Control Subclasses/CustomTextField.xojo_code;&h2D6707FF;&h6E7117FF;false
+Class=CustomListbox;GUI/Control Subclasses/CustomListbox.xojo_code;&h51960FFF;&h6E7117FF;false
 DefaultWindow=WndMonitor
 AppMenuBar=MainMenuBar
 MajorVersion=1
