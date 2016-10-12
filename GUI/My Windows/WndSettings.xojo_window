@@ -10,7 +10,7 @@ Begin Window WndSettings
    FullScreenButton=   False
    HasBackColor    =   False
    Height          =   202
-   ImplicitInstance=   True
+   ImplicitInstance=   False
    LiveResize      =   True
    MacProcID       =   0
    MaxHeight       =   32000
