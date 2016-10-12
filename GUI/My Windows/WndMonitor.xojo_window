@@ -18,9 +18,9 @@ Begin Window WndMonitor
    MaxWidth        =   32000
    MenuBar         =   520355839
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   200
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   400
    Placement       =   0
    Resizeable      =   True
    Title           =   "OpenVPN Server Monitor"
@@ -93,7 +93,7 @@ Begin Window WndMonitor
       TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
-      TextFont        =   "System"
+      TextFont        =   "SmallSystem"
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
