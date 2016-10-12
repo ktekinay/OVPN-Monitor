@@ -15,18 +15,25 @@ Inherits Application
 		  // Find an existing new Monitor window
 		  //
 		  dim useWnd as WndMonitor
+		  dim newWnd as WndMonitor
 		  
 		  dim lastIndex as integer = WindowCount - 1
 		  for i as integer = lastIndex downto 0
 		    dim w as Window = Window( i )
 		    if w isa WndMonitor then
 		      dim monitor as WndMonitor = WndMonitor( w )
-		      if monitor.IsNew then
+		      if monitor.IsNew and newWnd is nil then
+		        newWnd = monitor
+		      elseif monitor.File isa object and monitor.File.Path.Compare( item.NativePath.ToText, Text.CompareCaseSensitive ) = 0 then
 		        useWnd = monitor
 		        exit for i
 		      end if
 		    end if
 		  next
+		  
+		  if useWnd is nil then
+		    useWnd = newWnd
+		  end if
 		  
 		  if useWnd is nil then
 		    useWnd = new WndMonitor

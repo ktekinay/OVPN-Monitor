@@ -3,7 +3,7 @@
 		CodeName=Monitor
 		DocIcon=OVPN Monitor.xojo_resources;&h0
 		Extension=.ovpnmonitor
-		Flags=&h0
+		Flags=&h5
 		MacCreator=
 		MacType=
 		Name=Monitor

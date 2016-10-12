@@ -105,10 +105,48 @@ Begin Window WndMonitor
       _ScrollOffset   =   0
       _ScrollWidth    =   -1
    End
+   Begin Timer TmrForceClose
+      Index           =   -2147483648
+      LockedInPosition=   False
+      Mode            =   0
+      Period          =   500
+      Scope           =   2
+      TabPanelIndex   =   0
+   End
 End
 #tag EndWindow
 
 #tag WindowCode
+	#tag Event
+		Function CancelClose(appQuitting as Boolean) As Boolean
+		  #pragma unused appQuitting
+		  
+		  dim result as boolean
+		  
+		  if ContentsChanged then
+		    dim dlg as new MessageDialog
+		    dlg.Message = "Do you want to save changes before closing?"
+		    dlg.Explanation = "If you don't save, your changes will be lost."
+		    dlg.ActionButton.Caption = "&Save"
+		    dlg.AlternateActionButton.Caption = "&Don't Save"
+		    dlg.AlternateActionButton.Visible = true
+		    dlg.CancelButton.Visible = true
+		    
+		    dim btn as MessageDialogButton = dlg.ShowModalWithin( self )
+		    if btn is dlg.ActionButton then
+		      result = not SaveDocument
+		      
+		    elseif btn is dlg.CancelButton then
+		      result = true
+		      
+		    end if
+		    
+		  end if
+		  
+		  return result
+		End Function
+	#tag EndEvent
+
 	#tag Event
 		Sub Close()
 		  TmrMonitor.Mode = Timer.ModeOff
@@ -138,14 +176,14 @@ End
 
 	#tag MenuHandler
 		Function FileSave() As Boolean Handles FileSave.Action
-			SaveDocument
+			call SaveDocument
 			return true
 		End Function
 	#tag EndMenuHandler
 
 	#tag MenuHandler
 		Function FileSaveAs() As Boolean Handles FileSaveAs.Action
-			DoSaveAs
+			call DoSaveAs
 			return true
 			
 		End Function
@@ -185,13 +223,14 @@ End
 		  if ShMonitor.IsRunning then
 		    ShMonitor.WriteLine "quit"
 		    Mode = Modes.Closing
+		    TmrForceClose.Mode = Timer.ModeSingle
 		  end if
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub DoSaveAs()
+		Private Function DoSaveAs() As Boolean
 		  dim dlg as new SaveAsDialog
 		  dlg.PromptText = "Save monitor document:"
 		  dlg.Filter = DocumentFileTypes.Monitor
@@ -199,13 +238,13 @@ End
 		  
 		  dim f as FolderItem = dlg.ShowModalWithin( self )
 		  if f is nil then
-		    return
+		    return false
 		  end if
 		  
 		  File = new Xojo.IO.FolderItem( f.NativePath.ToText )
-		  SaveDocument
+		  return SaveDocument
 		  
-		End Sub
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -351,37 +390,44 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub SaveDocument()
+		Private Function SaveDocument() As Boolean
 		  if File is nil then
-		    DoSaveAs
-		    return
+		    return DoSaveAs
 		  end if
 		  
 		  dim contents as text = Settings.ToJSON
 		  
-		  dim temp as FolderItem = GetTemporaryFolderItem
-		  dim tos as TextOutputStream = TextOutputStream.Append( temp )
+		  //
+		  // Backup the file
+		  //
+		  dim backup as Xojo.IO.FolderItem
+		  if File.Exists then
+		    backup = File.Parent.Child( File.Name + ".backup" + Xojo.Core.Date.Now.SecondsFrom1970.ToText )
+		    File.CopyTo backup
+		    dim bs as Xojo.IO.BinaryStream = Xojo.IO.BinaryStream.Open( File, Xojo.IO.BinaryStream.LockModes.ReadWrite )
+		    bs.Length = 0
+		    bs.Close
+		  end if
+		  
+		  dim tos as Xojo.IO.TextOutputStream
+		  if File.Exists then
+		    tos = Xojo.IO.TextOutputStream.Append( File, Xojo.Core.TextEncoding.UTF8 )
+		  else
+		    tos = Xojo.IO.TextOutputStream.Create( File, Xojo.Core.TextEncoding.UTF8 )
+		  end if
 		  tos.Write contents
 		  tos.Close
 		  
-		  dim newTemp as new Xojo.IO.FolderItem( temp.NativePath.ToText )
-		  dim dest as Xojo.IO.FolderItem = File.Parent.Child( newTemp.Name )
-		  if dest.Exists then
-		    dest.Delete
+		  if backup isa object then
+		    backup.Delete
 		  end if
-		  newTemp.MoveTo dest
-		  newTemp = dest
-		  
-		  if File.Exists then
-		    File.Delete
-		  end if
-		  newTemp.Name = File.Name
 		  
 		  ContentsChanged = false
 		  IsNew = false
 		  
 		  SetTitle
-		End Sub
+		  return true
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -411,8 +457,8 @@ End
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h21
-		Private File As Xojo.IO.FolderItem
+	#tag Property, Flags = &h0
+		File As Xojo.IO.FolderItem
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -490,6 +536,9 @@ End
 	#tag Event
 		Sub Action()
 		  if Mode <> Modes.Standby then
+		    if Mode = Modes.GettingStatus then
+		      CloseShell
+		    end if
 		    return
 		  end if
 		  
@@ -519,6 +568,12 @@ End
 		  
 		End Sub
 	#tag EndEvent
+	#tag Event
+		Sub Completed()
+		  Mode = Modes.Standby
+		  TmrForceClose.Mode = Timer.ModeOff
+		End Sub
+	#tag EndEvent
 #tag EndEvents
 #tag Events LbStatus
 	#tag Event
@@ -533,6 +588,17 @@ End
 		  end if
 		  
 		End Function
+	#tag EndEvent
+#tag EndEvents
+#tag Events TmrForceClose
+	#tag Event
+		Sub Action()
+		  if ShMonitor.IsRunning then
+		    ShMonitor.Close
+		  end if
+		  
+		  Mode = Modes.Standby
+		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag ViewBehavior
