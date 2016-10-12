@@ -82,6 +82,16 @@ Inherits Application
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Function UnhandledException(error As RuntimeException) As Boolean
+		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( error )
+		  MsgBox join( error.Stack, EndOfLine ).Left( 512 )
+		  quit
+		  return true
+		  
+		End Function
+	#tag EndEvent
+
 
 	#tag MenuHandler
 		Function FileNew() As Boolean Handles FileNew.Action
