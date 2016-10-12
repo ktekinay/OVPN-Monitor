@@ -2,6 +2,16 @@
 Protected Class App
 Inherits Application
 	#tag Event
+		Sub Close()
+		  if SingleLaunchMutex isa object then
+		    SingleLaunchMutex.Leave
+		    SingleLaunchMutex = nil
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+	#tag Event
 		Sub NewDocument()
 		  dim w as new WndMonitor
 		  w.Show
@@ -11,13 +21,26 @@ Inherits Application
 
 	#tag Event
 		Sub Open()
-		  dim args() as string = CommandLineArgs
-		  args.Remove 0
-		  for each arg as string in args
-		    dim f as new FolderItem( arg, FolderItem.PathTypeNative )
-		    OpenDocument f
-		  next
-		  
+		  SingleLaunchMutex = new Mutex( Crypto.MD5( App.ExecutableFile.NativePath ) )
+		  if not SingleLaunchMutex.TryEnter then
+		    
+		    MsgBox "Another instance is already running."
+		    SingleLaunchMutex = nil
+		    quit
+		    
+		  else
+		    
+		    dim args() as string = CommandLineArgs
+		    args.Remove 0
+		    if args.Ubound <> -1 then
+		      'MsgBox join( args, EndOfLine )
+		      for each arg as string in args
+		        dim f as new FolderItem( arg, FolderItem.PathTypeNative )
+		        OpenDocument f
+		      next
+		    end if
+		    
+		  end if
 		End Sub
 	#tag EndEvent
 
@@ -323,6 +346,11 @@ Inherits Application
 	#tag EndMethod
 
 
+	#tag Property, Flags = &h21
+		Private SingleLaunchMutex As Mutex
+	#tag EndProperty
+
+
 	#tag Constant, Name = kEditClear, Type = String, Dynamic = False, Default = \"&Delete", Scope = Public
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"&Delete"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"&Delete"
@@ -342,5 +370,12 @@ Inherits Application
 	#tag EndConstant
 
 
+	#tag ViewBehavior
+		#tag ViewProperty
+			Name="SingleLaunchMutex"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+	#tag EndViewBehavior
 End Class
 #tag EndClass
