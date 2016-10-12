@@ -113,14 +113,6 @@ Begin Window WndMonitor
       Scope           =   2
       TabPanelIndex   =   0
    End
-   Begin Timer TmrLoad
-      Index           =   -2147483648
-      LockedInPosition=   False
-      Mode            =   0
-      Period          =   20
-      Scope           =   2
-      TabPanelIndex   =   0
-   End
 End
 #tag EndWindow
 
@@ -257,8 +249,34 @@ End
 
 	#tag Method, Flags = &h0
 		Sub LoadDocument(f As Xojo.IO.FolderItem)
+		  dim tis as Xojo.IO.TextInputStream = Xojo.IO.TextInputStream.Open( f, Xojo.Core.TextEncoding.UTF8 )
+		  dim contents as text = tis.ReadAll
+		  tis.Close
+		  
+		  dim newSettings as new DocumentSettings
+		  newSettings.FromJSON contents
+		  
+		  if newSettings <> Settings then
+		    Settings = newSettings
+		    CloseShell
+		    LbStatus.DeleteAllRows
+		    LbStatus.HasHeading = false
+		  end if
+		  
+		  IsNew = false
+		  ContentsChanged = false
 		  File = f
-		  TmrLoad.Mode = Timer.ModeSingle
+		  
+		  SetTitle
+		  
+		  Exception err as RuntimeException
+		    if err isa EndException or err isa ThreadEndException then
+		      raise err
+		    end if
+		    
+		    MsgBox "Could not open this document." + EndOfLine + EndOfLine + err.Message
+		    self.Close
+		    
 		End Sub
 	#tag EndMethod
 
