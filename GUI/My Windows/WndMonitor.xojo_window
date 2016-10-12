@@ -249,13 +249,20 @@ End
 
 	#tag Method, Flags = &h0
 		Sub LoadDocument(f As Xojo.IO.FolderItem)
-		  CloseShell
-		  
 		  dim tis as Xojo.IO.TextInputStream = Xojo.IO.TextInputStream.Open( f, Xojo.Core.TextEncoding.UTF8 )
 		  dim contents as text = tis.ReadAll
 		  tis.Close
 		  
-		  Settings.FromJSON contents
+		  dim newSettings as new DocumentSettings
+		  newSettings.FromJSON contents
+		  
+		  if newSettings <> Settings then
+		    Settings = newSettings
+		    CloseShell
+		    LbStatus.DeleteAllRows
+		    LbStatus.HasHeading = false
+		  end if
+		  
 		  IsNew = false
 		  ContentsChanged = false
 		  File = f
