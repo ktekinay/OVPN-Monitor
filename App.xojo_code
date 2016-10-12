@@ -21,7 +21,7 @@ Inherits Application
 
 	#tag Event
 		Sub Open()
-		  SingleLaunchMutex = new Mutex( Crypto.MD5( App.ExecutableFile.NativePath ) )
+		  SingleLaunchMutex = new Mutex( EncodeHex( Crypto.MD5( App.ExecutableFile.NativePath ) ) )
 		  if not SingleLaunchMutex.TryEnter then
 		    
 		    MsgBox "Another instance is already running."
