@@ -98,6 +98,7 @@ Begin Window WndMonitor
       TextUnit        =   0
       Top             =   20
       Underline       =   False
+      UseAlternateRowColor=   False
       UseFocusRing    =   True
       Visible         =   True
       Width           =   583
@@ -114,6 +115,41 @@ End
 		  CloseShell
 		End Sub
 	#tag EndEvent
+
+	#tag Event
+		Sub Open()
+		  static counter as integer
+		  
+		  counter = counter + 1
+		  WindowIndex = counter
+		  
+		  SetTitle
+		End Sub
+	#tag EndEvent
+
+
+	#tag MenuHandler
+		Function FileClose() As Boolean Handles FileClose.Action
+			self.Close
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function FileSave() As Boolean Handles FileSave.Action
+			SaveDocument
+			return true
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function FileSaveAs() As Boolean Handles FileSaveAs.Action
+			DoSaveAs
+			return true
+			
+		End Function
+	#tag EndMenuHandler
 
 
 	#tag Method, Flags = &h21
@@ -151,6 +187,50 @@ End
 		    Mode = Modes.Closing
 		  end if
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub DoSaveAs()
+		  dim dlg as new SaveAsDialog
+		  dlg.PromptText = "Save monitor document:"
+		  dlg.Filter = DocumentFileTypes.Monitor
+		  dlg.SuggestedFileName = "Untitled" + DocumentFileTypes.Monitor.Extensions
+		  
+		  dim f as FolderItem = dlg.ShowModalWithin( self )
+		  if f is nil then
+		    return
+		  end if
+		  
+		  File = new Xojo.IO.FolderItem( f.NativePath.ToText )
+		  SaveDocument
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub LoadDocument(f As Xojo.IO.FolderItem)
+		  CloseShell
+		  
+		  dim tis as Xojo.IO.TextInputStream = Xojo.IO.TextInputStream.Open( f, Xojo.Core.TextEncoding.UTF8 )
+		  dim contents as text = tis.ReadAll
+		  tis.Close
+		  
+		  Settings.FromJSON contents
+		  IsNew = false
+		  ContentsChanged = false
+		  File = f
+		  
+		  SetTitle
+		  
+		  Exception err as RuntimeException
+		    if err isa EndException or err isa ThreadEndException then
+		      raise err
+		    end if
+		    
+		    MsgBox "Could not open this document." + EndOfLine + EndOfLine + err.Message
+		    self.Close
+		    
 		End Sub
 	#tag EndMethod
 
@@ -271,17 +351,73 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub SaveDocument()
+		  if File is nil then
+		    DoSaveAs
+		    return
+		  end if
+		  
+		  dim contents as text = Settings.ToJSON
+		  
+		  dim temp as FolderItem = GetTemporaryFolderItem
+		  dim tos as TextOutputStream = TextOutputStream.Append( temp )
+		  tos.Write contents
+		  tos.Close
+		  
+		  dim newTemp as new Xojo.IO.FolderItem( temp.NativePath.ToText )
+		  dim dest as Xojo.IO.FolderItem = File.Parent.Child( newTemp.Name )
+		  if dest.Exists then
+		    dest.Delete
+		  end if
+		  newTemp.MoveTo dest
+		  newTemp = dest
+		  
+		  if File.Exists then
+		    File.Delete
+		  end if
+		  newTemp.Name = File.Name
+		  
+		  ContentsChanged = false
+		  IsNew = false
+		  
+		  SetTitle
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub SetTitle()
+		  if IsNew then
+		    Title = kDefaultTitle + str( WindowIndex )
+		  elseif File isa object then
+		    Title = File.Name
+		  else
+		    Title = Settings.ShellCommand
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub ShowSettings()
 		  dim w as new WndSettings
 		  dim newSettings as DocumentSettings = w.ShowModalWithin( self, Settings )
-		  if newSettings isa object then
+		  if newSettings isa object and newSettings <> Settings then
 		    CloseShell
 		    Settings = newSettings
+		    IsNew = false
+		    self.ContentsChanged = true
 		  end if
 		  
 		End Sub
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h21
+		Private File As Xojo.IO.FolderItem
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		IsNew As Boolean = True
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private Mode As Modes
@@ -308,6 +444,14 @@ End
 		#tag EndSetter
 		Private Settings As DocumentSettings
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private WindowIndex As Integer
+	#tag EndProperty
+
+
+	#tag Constant, Name = kDefaultTitle, Type = String, Dynamic = False, Default = \"New OpenVPN Monitor ", Scope = Private
+	#tag EndConstant
 
 
 	#tag Enum, Name = Columns, Type = Integer, Flags = &h21

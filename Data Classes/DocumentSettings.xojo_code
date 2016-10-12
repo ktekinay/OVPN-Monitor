@@ -35,6 +35,41 @@ Protected Class DocumentSettings
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Attributes( hidden )  Function Operator_Compare(other As DocumentSettings) As Integer
+		  dim result as integer = 0
+		  
+		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
+		  
+		  for each prop as Xojo.Introspection.PropertyInfo in ti.Properties
+		    if not prop.IsShared and prop.IsPublic and prop.CanRead and prop.CanWrite then
+		      select case prop.PropertyType.Name
+		      case "String"
+		        result = StrComp( prop.Value( self ), prop.Value( other ), 0 )
+		        
+		      case "Text"
+		        dim t1 as text = prop.Value( self )
+		        dim t2 as text = prop.Value( other )
+		        result = t1.Compare( t2, Text.CompareCaseSensitive, Xojo.Core.Locale.Current )
+		        
+		      case else
+		        //
+		        // We don't know the type so raise an exception
+		        //
+		        raise new UnsupportedFormatException
+		        
+		      end select
+		      
+		      if result <> 0 then
+		        exit for prop
+		      end if
+		    end if
+		  next
+		  
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Reset()
 		  FromDictionary DefaultSettingsDict
 		End Sub
