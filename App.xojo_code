@@ -87,6 +87,13 @@ Inherits Application
 		End Function
 	#tag EndMenuHandler
 
+	#tag MenuHandler
+		Function HelpAbout() As Boolean Handles HelpAbout.Action
+			WndAbout.Show
+			return true
+		End Function
+	#tag EndMenuHandler
+
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetHasGUI)
 		Function CommandLineArgs() As String()

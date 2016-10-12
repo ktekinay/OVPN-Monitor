@@ -23,6 +23,7 @@ Class=PlatformPushButton;GUI/My Widgets/PlatformPushButton.xojo_code;&h3578F1B0;
 Window=DialogButtonContainer;GUI/My Widgets/DialogButtonContainer.xojo_window;&h250AC3B6;&h4562FFFF;false
 Class=CustomTextField;GUI/Control Subclasses/CustomTextField.xojo_code;&h2D6707FF;&h6E7117FF;false
 Class=CustomListbox;GUI/Control Subclasses/CustomListbox.xojo_code;&h51960FFF;&h6E7117FF;false
+Window=WndAbout;GUI/My Windows/WndAbout.xojo_window;&h4EEE3FFF;&h6ADEB7FF;false
 AppMenuBar=MainMenuBar
 MajorVersion=1
 MinorVersion=0
