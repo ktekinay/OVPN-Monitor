@@ -84,7 +84,6 @@ Inherits Application
 
 	#tag Event
 		Function UnhandledException(error As RuntimeException) As Boolean
-		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( error )
 		  MsgBox join( error.Stack, EndOfLine ).Left( 512 )
 		  quit
 		  return true
