@@ -1,0 +1,17 @@
+#tag FileTypeSet
+	#tag FileType
+		CodeName=Monitor
+		DocIcon=OVPN Monitor.xojo_resources;&h0
+		Extension=.ovpnmonitor
+		Flags=&h5
+		MacCreator=
+		MacType=
+		Name=Monitor
+		UTI=
+		UTIConformsTo=
+		Description=OpenVPN Monitor Document
+		MimeType=
+		Imported=False
+	#tag EndFileType
+
+#tag EndFileTypeSet
