@@ -57,4 +57,5 @@ UseBuildsFolder=True
 HiDPI=True
 IsWebProject=False
 LinuxBuildArchitecture=2
+MacBuildArchitecture=1
 OptimizationLevel=0
